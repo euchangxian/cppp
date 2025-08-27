@@ -1,11 +1,15 @@
+#pragma once
+
 #include <algorithm>
 #include <cstddef>
 #include <cstdlib>
+#include <cstring>
+#include <iterator>
 #include <memory>
-#include <type_traits>
+#include <new>
 #include <utility>
 
-namespace ecx {
+namespace ecx::stl {
 
 template <typename T>
 class Vector {
@@ -13,6 +17,7 @@ class Vector {
   using SizeT = std::size_t;
   using ValueT = T;
   using PointerT = T*;
+  using ConstPointerT = const T*;
   using ReferenceT = T&;
   using ConstReferenceT = const T&;
 
@@ -27,9 +32,16 @@ class Vector {
    */
   class Iterator {
    public:
-    explicit Iterator(PointerT ptr) : curr_(ptr) {}
+    // Iterator Traits
+    using iterator_category = std::random_access_iterator_tag;
+    using value_type = ValueT;
+    using difference_type = std::ptrdiff_t;
+    using pointer = PointerT;
+    using reference = ReferenceT;
 
-    ReferenceT operator*() { return *curr_; }
+    explicit Iterator(pointer ptr) : curr_(ptr) {}
+
+    reference operator*() const { return *curr_; }
 
     Iterator& operator++() {
       ++curr_;
@@ -42,93 +54,125 @@ class Vector {
       return pre;
     }
 
+    // C++20, compiler will generate operator != if operator== is defined.
     bool operator==(const Iterator& other) const {
       return curr_ == other.curr_;
     }
 
-    // TODO: Figure out why the operator== overload does not handle this.
-    // Check out the starship operator <=>
-    bool operator!=(const Iterator& other) const {
-      return curr_ != other.curr_;
-    }
+    Iterator operator+(SizeT x) const { return Iterator(curr_ + x); }
 
-    Iterator& operator+(SizeT x) {
-      curr_ += x;
+   private:
+    pointer curr_;
+  };
+
+  class ConstIterator {
+   public:
+    // Iterator Traits
+    using iterator_category = std::random_access_iterator_tag;
+    using value_type = ValueT;
+    using difference_type = std::ptrdiff_t;
+    using pointer = ConstPointerT;
+    using reference = ConstReferenceT;
+
+    explicit ConstIterator(pointer ptr) : curr_(ptr) {}
+
+    ConstReferenceT operator*() const { return *curr_; }
+
+    ConstIterator& operator++() {
+      ++curr_;
       return *this;
     }
 
+    ConstIterator operator++(int) {
+      ConstIterator pre = *this;
+      ++(*this);
+      return pre;
+    }
+
+    bool operator==(const ConstIterator& other) const {
+      return curr_ == other.curr_;
+    }
+
+    ConstIterator operator+(SizeT x) const { return ConstIterator(curr_ + x); }
+
    private:
-    PointerT curr_;
+    pointer curr_;
   };
 
   using IteratorT = Iterator;
-  using ReferenceIterator = Iterator&;
-  using ConstReferenceIterator = const Iterator&;
+  using ConstIteratorT = ConstIterator;
+  using ReverseIteratorT = std::reverse_iterator<IteratorT>;
+  using ConstReverseIteratorT = std::reverse_iterator<ConstIteratorT>;
 
   explicit Vector() noexcept : size_(0), capacity_(0), data_(nullptr) {}
 
-  explicit Vector(SizeT n) : size_(n), capacity_(n), data_(new T[n]) {}
+  explicit Vector(SizeT n) : size_(n), capacity_(n), data_(allocate(n)) {
+    std::uninitialized_default_construct(begin(), end());
+  }
 
   explicit Vector(SizeT n, ConstReferenceT init)
-      : size_(n), capacity_(n), data_(new T[n]) {
-    // TODO:
+      : size_(n), capacity_(n), data_(allocate(n)) {
+    std::uninitialized_fill(begin(), end(), init);
   }
 
-  Vector(std::initializer_list<ValueT> init) {
-    // TODO:
+  Vector(std::initializer_list<ValueT> init) : Vector() {
+    reserve(init.size());
+    std::uninitialized_copy(init.begin(), init.end(), begin());
+    size_ = init.size();
   }
 
-  Vector(ConstReferenceT other)
+  Vector(const Vector& other)
       : size_(other.size_),
-
         capacity_(other.capacity_),
-        data_(new T[other.capacity_]) {
-    for (SizeT i = 0; i < other.size_; ++i) {
-      data_[i] = other.data_[i];
-    }
+        data_(allocate(other.capacity_)) {
+    std::uninitialized_copy(other.begin(), other.end(), begin());
   }
 
-  // NOTE:
-  // Can be optimised to not allocate memory if the current capacity
-  // is sufficient. But this is succinct.
-  ReferenceT operator=(ConstReferenceT other) {
+  Vector& operator=(const Vector& other) {
     if (this != &other) {
       Vector temp(other);
-      std::swap(data_, temp.data_);
-      std::swap(size_, temp.size_);
-      std::swap(capacity_, temp.capacity_);
+      std::swap(*this, temp);
     }
 
     return *this;
   }
 
   Vector(Vector&& other) noexcept
-      : size_(std::exchange(other.size(), 0)),
-        capacity_(std::exchange(other.capacity(), 0)),
-        data_(std::exchange(other.data(), nullptr)) {}
+      : size_(std::exchange(other.size_, 0)),
+        capacity_(std::exchange(other.capacity_, 0)),
+        data_(std::exchange(other.data_, nullptr)) {}
 
-  ReferenceT operator=(Vector&& other) noexcept {
+  Vector& operator=(Vector&& other) noexcept {
     if (this != &other) {
-      delete[] data_;
+      std::destroy(begin(), end());
+      ::operator delete(data_);
 
-      size_ = std::exchange(other.size_, 0);
-      capacity_ = std::exchange(other.capacity_, 0);
-      data_ = std::exchange(other.data_, nullptr);
+      steal(other);
     }
 
     return *this;
   }
 
   ~Vector() {
-    if (data_ != nullptr) {
-      delete[] data_;
-    }
+    std::destroy(begin(), end());
+    ::operator delete(data_);
   }
 
-  // TODO: Const Iterators
   IteratorT begin() { return Iterator(data_); }
 
   IteratorT end() { return Iterator(data_ + size_); }
+
+  ConstIteratorT begin() const { return ConstIterator(data_); }
+
+  ConstIteratorT end() const { return ConstIterator(data_ + size_); }
+
+  ReverseIteratorT rbegin() { return ReverseIteratorT(end()); }
+
+  ReverseIteratorT rend() { return ReverseIteratorT(begin()); }
+
+  ConstReverseIteratorT rbegin() const { return ConstReverseIteratorT(end()); }
+
+  ConstReverseIteratorT rend() const { return ConstReverseIteratorT(begin()); }
 
   /**
    * Increase the capacity of the vector (the total number of elements that the
@@ -151,32 +195,25 @@ class Vector {
       return;
     }
 
-    // NOTE: Copy-and-Swap idiom for Exception Safety.
-    // If an exception occurs especially in std::memcpy, then in the naive way
-    // where only a buffer is created, there will be a memory leak.
-    // Hence, we exploit RAII, creating a temporary Vector.
-    Vector temp;
-    temp.size_ = size_;
-    temp.capacity_ = newCapacity;
-    temp.data_ = new T[newCapacity];
-
-    if constexpr (std::is_trivially_copyable_v<T>) {
-      if (temp.size_ > 0) {
-        std::memcpy(temp.data_, data_, temp.size_ * sizeof(T));
-      }
-    } else {
-      for (SizeT i = 0; i < temp.size_; ++i) {
-        temp.data_[i] = std::move_if_noexcept(data_[i]);
-      }
+    // NOTE:
+    // Instead of doing the CAS idiom, we make use of std::uninitialized_move,
+    // which essentially:
+    // 1. move if noexcept
+    // 2. copy otherwise,
+    // This provides Exception Safety, since the moved-from buffer can be
+    // destroyed without crashing.
+    // It is crucial that we do not call the destructor on the moved-from buffer
+    // as it may try to release any resources that it no longer owns.
+    PointerT tempBuffer = allocate(newCapacity);
+    if (data_) {
+      std::uninitialized_move(begin(), end(), tempBuffer);
     }
+    ::operator delete(data_);
 
-    // no need to explicitly delete data_, the other Vector will handle.
-    std::swap(data_, temp.data_);
-    std::swap(size_, temp.size_);
-    std::swap(capacity_, temp.capacity_);
+    data_ = tempBuffer;
+    capacity_ = newCapacity;
   }
 
-  // TODO: shrink and expand
   /**
    * Resizes the container to contain count elements:
    * If count is equal to the current size, does nothing.
@@ -203,55 +240,78 @@ class Vector {
     size_ = newSize;
   }
 
-  void resize(SizeT newSize, ConstReferenceT value) {}
+  void resize(SizeT newSize, ConstReferenceT value) {
+    if (size_ == newSize) {
+      return;
+    }
+
+    if (newSize < size_) {
+      std::destroy_n(begin() + newSize, size_ - newSize);
+    } else {
+      reserve(newSize);
+      std::uninitialized_fill_n(begin() + size_, newSize - size_, value);
+    }
+    size_ = newSize;
+  }
 
   void push_back(ConstReferenceT elem) {
-    if (size_ + 1 >= capacity_) {
+    if (size_ >= capacity_) {
       reserve(capacity_ == 0 ? 1 : capacity_ * 2);
     }
-    data_[size_++] = elem;
+
+    new (&data_[size_++]) ValueT(elem);
   }
 
   void push_back(T&& elem) {
-    if (size_ + 1 >= capacity_) {
+    if (size_ >= capacity_) {
       reserve(capacity_ == 0 ? 1 : capacity_ * 2);
     }
-    data_[size_++] = std::move(elem);
+
+    new (&data_[size_++]) ValueT(std::move(elem));
   }
 
   template <typename... Args>
-  ReferenceT emplace_back(Args&&... args) {}
+  ReferenceT emplace_back(Args&&... args) {
+    if (size_ >= capacity_) {
+      reserve(capacity_ == 0 ? 1 : capacity_ * 2);
+    }
 
-  void pop_back() {}
-
-  ReferenceT back() {
-    // Not sure if an if-check is done here.
-    return data_[size_ - 1];
+    new (&data_[size_]) ValueT(std::forward<Args>(args)...);
+    return data_[size_++];
   }
 
-  ConstReferenceT back() const {
-    // Not sure if an if-check is done here.
-    return data_[size_ - 1];
-  }
+  void pop_back() { std::destroy_at(&data_[--size_]); }
 
-  SizeT size() const { return size_; }
+  ReferenceT back() { return data_[size_ - 1]; }
 
-  bool empty() const { return size_ == 0; }
+  ConstReferenceT back() const { return data_[size_ - 1]; }
 
-  SizeT capacity() const { return capacity_; }
+  SizeT size() const noexcept { return size_; }
 
-  PointerT data() const { return data_; }
+  bool empty() const noexcept { return size_ == 0; }
+
+  SizeT capacity() const noexcept { return capacity_; }
+
+  PointerT data() const noexcept { return data_; }
 
   ReferenceT operator[](SizeT i) { return data_[i]; }
 
   ConstReferenceT operator[](SizeT i) const { return data_[i]; }
 
  private:
+  PointerT allocate(SizeT n) {
+    return static_cast<PointerT>(::operator new(n * sizeof(ValueT)));
+  }
+
+  void steal(Vector& other) {
+    size_ = std::exchange(other.size_, 0);
+    capacity_ = std::exchange(other.capacity_, 0);
+    data_ = std::exchange(other.data_, nullptr);
+  }
+
   SizeT size_{};
-
   SizeT capacity_{};
-
   PointerT data_;
 };
 
-}  // namespace ecx
+}  // namespace ecx::stl
