@@ -2,6 +2,7 @@ include(GoogleTest)
 
 set(TEST_SRCS
   Vector.t.cpp
+  UniquePointer.t.cpp
 )
 
 add_executable(stl_tests
