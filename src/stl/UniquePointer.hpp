@@ -73,21 +73,23 @@ template <typename T, typename Deleter = std::default_delete<T>>
 class UniquePointer : private Deleter {
  public:
   using PointerT = T*;
-  using DeleterT = Deleter;
 
   static constexpr auto isNoThrowDeleter =
-      std::is_nothrow_invocable_v<DeleterT, PointerT>;
+      std::is_nothrow_invocable_v<Deleter, PointerT>;
 
-  constexpr explicit UniquePointer(PointerT ptr = nullptr,
-                                   DeleterT deleter = DeleterT()) noexcept
-      : DeleterT(std::move(deleter)), ptr_(ptr) {}
+  constexpr explicit UniquePointer(PointerT ptr = nullptr) noexcept
+      : Deleter(), ptr_(ptr) {}
+
+  template <typename DeleterT = Deleter>
+  constexpr explicit UniquePointer(PointerT ptr, DeleterT&& deleter) noexcept
+      : Deleter(std::forward<DeleterT>(deleter)), ptr_(ptr) {}
 
   constexpr explicit UniquePointer(const UniquePointer&) = delete;
 
   constexpr UniquePointer& operator=(const UniquePointer&) = delete;
 
   constexpr explicit UniquePointer(UniquePointer&& other) noexcept
-      : DeleterT(std::move(other.getDeleter())), ptr_(other.release()) {}
+      : Deleter(std::move(other.getDeleter())), ptr_(other.release()) {}
 
   constexpr UniquePointer& operator=(UniquePointer&& other) noexcept(
       isNoThrowDeleter) {
@@ -119,15 +121,15 @@ class UniquePointer : private Deleter {
   constexpr PointerT operator->() const noexcept { return ptr_; }
   constexpr explicit operator bool() const noexcept { return !!ptr_; };
 
+  constexpr Deleter& getDeleter() noexcept {
+    return static_cast<Deleter&>(*this);
+  }
+
+  constexpr const Deleter& getDeleter() const noexcept {
+    return static_cast<Deleter&>(*this);
+  }
+
  private:
-  constexpr DeleterT& getDeleter() noexcept {
-    return static_cast<DeleterT&>(*this);
-  }
-
-  constexpr const DeleterT& getDeleter() const noexcept {
-    return static_cast<DeleterT&>(*this);
-  }
-
   PointerT ptr_;
 };
 

@@ -11,7 +11,20 @@ struct UniquePointerTest : ::testing::Test {
   };
 
   struct StatefulDeleter {
-    int state = 0;
+    int moveCount = 0;
+
+    StatefulDeleter() = default;
+    StatefulDeleter(StatefulDeleter&& other) noexcept
+        : moveCount(std::exchange(other.moveCount, 0) + 1) {}
+
+    StatefulDeleter& operator=(StatefulDeleter&& other) noexcept {
+      if (this == &other) {
+        return *this;
+      }
+      moveCount = std::exchange(other.moveCount, 0) + 1;
+      return *this;
+    }
+
     void operator()(auto* ptr) const { delete ptr; }
   };
 };
@@ -114,6 +127,35 @@ TEST_F(UniquePointerTest,
        UniquePointerWithStatefulDeleterHasNonEmptyBaseClassSize) {
   using UniquePointerStatefulDeleter = UniquePointer<int, StatefulDeleter>;
   static_assert(sizeof(UniquePointerStatefulDeleter) == 2 * sizeof(int*));
+}
+
+TEST_F(UniquePointerTest, MoveConstructorTransfersStatefulDeleterOwnership) {
+  UniquePointer<int, StatefulDeleter> ptr1(new int(100));
+  EXPECT_EQ(ptr1.getDeleter().moveCount, 0);
+
+  UniquePointer<int, StatefulDeleter> ptr2(std::move(ptr1));
+  EXPECT_EQ(ptr1.getDeleter().moveCount, 0);
+  EXPECT_EQ(ptr2.getDeleter().moveCount, 1);
+
+  UniquePointer<int, StatefulDeleter> ptr3(std::move(ptr2));
+  EXPECT_EQ(ptr1.getDeleter().moveCount, 0);
+  EXPECT_EQ(ptr2.getDeleter().moveCount, 0);
+  EXPECT_EQ(ptr3.getDeleter().moveCount, 2);
+}
+
+TEST_F(UniquePointerTest, MoveAssignmentTransfersStatefulDeleterOwnership) {
+  UniquePointer<int, StatefulDeleter> ptr1(new int(100));
+  UniquePointer<int, StatefulDeleter> ptr2(new int(200));
+  UniquePointer<int, StatefulDeleter> ptr3(new int(300));
+
+  ptr2 = std::move(ptr1);
+  EXPECT_EQ(ptr1.getDeleter().moveCount, 0);
+  EXPECT_EQ(ptr2.getDeleter().moveCount, 1);
+
+  ptr3 = std::move(ptr2);
+  EXPECT_EQ(ptr1.getDeleter().moveCount, 0);
+  EXPECT_EQ(ptr2.getDeleter().moveCount, 0);
+  EXPECT_EQ(ptr3.getDeleter().moveCount, 2);
 }
 
 TEST_F(UniquePointerTest, SelfMoveAssignmentIsHandled) {
