@@ -1,2 +1,10 @@
 CompileFlags:
   CompilationDatabase: build
+  Remove: -f*
+  Add:
+    [
+      "-isysroot",
+      "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk",
+      "-I/opt/homebrew/Cellar/gcc/15.1.0/include/c++/15",
+      "-I/opt/homebrew/Cellar/gcc/15.1.0/include/c++/15/aarch64-apple-darwin24",
+    ]

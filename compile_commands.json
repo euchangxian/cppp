@@ -1,0 +1,38 @@
+[
+{
+  "directory": "/Users/euchangxian/CodeMonkey/cppp/build",
+  "command": "/opt/homebrew/bin/g++-15 -I/Users/euchangxian/CodeMonkey/cppp/build/_deps/googletest-src/googlemock/include -I/Users/euchangxian/CodeMonkey/cppp/build/_deps/googletest-src/googlemock -isystem /Users/euchangxian/CodeMonkey/cppp/build/_deps/googletest-src/googletest/include -isystem /Users/euchangxian/CodeMonkey/cppp/build/_deps/googletest-src/googletest  -Wall -Wextra -Wpedantic -std=c++23 -arch arm64 -Wall -Wshadow -Wundef -Wno-error=dangling-else -DGTEST_HAS_PTHREAD=1 -fexceptions -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -o _deps/googletest-build/googlemock/CMakeFiles/gmock.dir/src/gmock-all.cc.o -c /Users/euchangxian/CodeMonkey/cppp/build/_deps/googletest-src/googlemock/src/gmock-all.cc",
+  "file": "/Users/euchangxian/CodeMonkey/cppp/build/_deps/googletest-src/googlemock/src/gmock-all.cc",
+  "output": "/Users/euchangxian/CodeMonkey/cppp/build/_deps/googletest-build/googlemock/CMakeFiles/gmock.dir/src/gmock-all.cc.o"
+},
+{
+  "directory": "/Users/euchangxian/CodeMonkey/cppp/build",
+  "command": "/opt/homebrew/bin/g++-15 -isystem /Users/euchangxian/CodeMonkey/cppp/build/_deps/googletest-src/googlemock/include -isystem /Users/euchangxian/CodeMonkey/cppp/build/_deps/googletest-src/googlemock -isystem /Users/euchangxian/CodeMonkey/cppp/build/_deps/googletest-src/googletest/include -isystem /Users/euchangxian/CodeMonkey/cppp/build/_deps/googletest-src/googletest  -Wall -Wextra -Wpedantic -std=c++23 -arch arm64 -Wall -Wshadow -Wundef -Wno-error=dangling-else -DGTEST_HAS_PTHREAD=1 -fexceptions -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -o _deps/googletest-build/googlemock/CMakeFiles/gmock_main.dir/src/gmock_main.cc.o -c /Users/euchangxian/CodeMonkey/cppp/build/_deps/googletest-src/googlemock/src/gmock_main.cc",
+  "file": "/Users/euchangxian/CodeMonkey/cppp/build/_deps/googletest-src/googlemock/src/gmock_main.cc",
+  "output": "/Users/euchangxian/CodeMonkey/cppp/build/_deps/googletest-build/googlemock/CMakeFiles/gmock_main.dir/src/gmock_main.cc.o"
+},
+{
+  "directory": "/Users/euchangxian/CodeMonkey/cppp/build",
+  "command": "/opt/homebrew/bin/g++-15 -I/Users/euchangxian/CodeMonkey/cppp/build/_deps/googletest-src/googletest/include -I/Users/euchangxian/CodeMonkey/cppp/build/_deps/googletest-src/googletest  -Wall -Wextra -Wpedantic -std=c++23 -arch arm64 -Wall -Wshadow -Wundef -Wno-error=dangling-else -DGTEST_HAS_PTHREAD=1 -fexceptions -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -o _deps/googletest-build/googletest/CMakeFiles/gtest.dir/src/gtest-all.cc.o -c /Users/euchangxian/CodeMonkey/cppp/build/_deps/googletest-src/googletest/src/gtest-all.cc",
+  "file": "/Users/euchangxian/CodeMonkey/cppp/build/_deps/googletest-src/googletest/src/gtest-all.cc",
+  "output": "/Users/euchangxian/CodeMonkey/cppp/build/_deps/googletest-build/googletest/CMakeFiles/gtest.dir/src/gtest-all.cc.o"
+},
+{
+  "directory": "/Users/euchangxian/CodeMonkey/cppp/build",
+  "command": "/opt/homebrew/bin/g++-15 -isystem /Users/euchangxian/CodeMonkey/cppp/build/_deps/googletest-src/googletest/include -isystem /Users/euchangxian/CodeMonkey/cppp/build/_deps/googletest-src/googletest  -Wall -Wextra -Wpedantic -std=c++23 -arch arm64 -Wall -Wshadow -Wundef -Wno-error=dangling-else -DGTEST_HAS_PTHREAD=1 -fexceptions -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -o _deps/googletest-build/googletest/CMakeFiles/gtest_main.dir/src/gtest_main.cc.o -c /Users/euchangxian/CodeMonkey/cppp/build/_deps/googletest-src/googletest/src/gtest_main.cc",
+  "file": "/Users/euchangxian/CodeMonkey/cppp/build/_deps/googletest-src/googletest/src/gtest_main.cc",
+  "output": "/Users/euchangxian/CodeMonkey/cppp/build/_deps/googletest-build/googletest/CMakeFiles/gtest_main.dir/src/gtest_main.cc.o"
+},
+{
+  "directory": "/Users/euchangxian/CodeMonkey/cppp/build",
+  "command": "/opt/homebrew/bin/g++-15 -I/Users/euchangxian/CodeMonkey/cppp -isystem /Users/euchangxian/CodeMonkey/cppp/build/_deps/googletest-src/googletest/include -isystem /Users/euchangxian/CodeMonkey/cppp/build/_deps/googletest-src/googletest  -Wall -Wextra -Wpedantic -std=c++23 -arch arm64 -fmodules-ts -fmodule-mapper=src/stl/tests/CMakeFiles/stl_tests.dir/Vector.t.cpp.o.modmap -MD -fdeps-format=p1689r5 -x c++ -o src/stl/tests/CMakeFiles/stl_tests.dir/Vector.t.cpp.o -c /Users/euchangxian/CodeMonkey/cppp/src/stl/tests/Vector.t.cpp",
+  "file": "/Users/euchangxian/CodeMonkey/cppp/src/stl/tests/Vector.t.cpp",
+  "output": "/Users/euchangxian/CodeMonkey/cppp/build/src/stl/tests/CMakeFiles/stl_tests.dir/Vector.t.cpp.o"
+},
+{
+  "directory": "/Users/euchangxian/CodeMonkey/cppp/build",
+  "command": "/opt/homebrew/bin/g++-15 -I/Users/euchangxian/CodeMonkey/cppp -isystem /Users/euchangxian/CodeMonkey/cppp/build/_deps/googletest-src/googletest/include -isystem /Users/euchangxian/CodeMonkey/cppp/build/_deps/googletest-src/googletest  -Wall -Wextra -Wpedantic -std=c++23 -arch arm64 -fmodules-ts -fmodule-mapper=src/stl/tests/CMakeFiles/stl_tests.dir/UniquePointer.t.cpp.o.modmap -MD -fdeps-format=p1689r5 -x c++ -o src/stl/tests/CMakeFiles/stl_tests.dir/UniquePointer.t.cpp.o -c /Users/euchangxian/CodeMonkey/cppp/src/stl/tests/UniquePointer.t.cpp",
+  "file": "/Users/euchangxian/CodeMonkey/cppp/src/stl/tests/UniquePointer.t.cpp",
+  "output": "/Users/euchangxian/CodeMonkey/cppp/build/src/stl/tests/CMakeFiles/stl_tests.dir/UniquePointer.t.cpp.o"
+}
+]
